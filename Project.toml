@@ -1,0 +1,7 @@
+name = "KineticaKPM"
+uuid = "9f8df979-2f01-44d9-baa5-45613ca42263"
+authors = ["joegilkes <j.gilkes@warwick.ac.uk>"]
+version = "0.1.0"
+
+[deps]
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
