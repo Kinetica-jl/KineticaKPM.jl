@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "7a30e084c7ee568f3f452c8302c1888deef15ec4"
+project_hash = "67b7eb251dd904b38f0ecec9853513e9c42c4e41"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -613,7 +613,7 @@ uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.4.0"
 
 [[deps.KineticaCore]]
-deps = ["BSON", "Catalyst", "DataStructures", "DelimitedFiles", "DifferentialEquations", "ExtXYZ", "LinearAlgebra", "Measurements", "ProgressLogging", "PyPlot", "UUIDs"]
+deps = ["BSON", "Catalyst", "Conda", "DataStructures", "Dates", "DelimitedFiles", "DifferentialEquations", "ExtXYZ", "LinearAlgebra", "Logging", "Measurements", "ProgressLogging", "PyCall", "PyPlot", "UUIDs"]
 path = "../KineticaCore"
 uuid = "3847ce11-53ec-444b-aa85-3b6606472139"
 version = "0.1.0"

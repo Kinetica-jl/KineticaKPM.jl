@@ -1,0 +1,3 @@
+[submodule "submodules/KineticPredictorModel"]
+	path = submodules/KineticPredictorModel
+	url = https://github.com/joegilkes/KineticPredictorModel
