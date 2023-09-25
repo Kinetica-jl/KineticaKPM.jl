@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.2"
+julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "67b7eb251dd904b38f0ecec9853513e9c42c4e41"
+project_hash = "d925e204af5b3984910a08a1bf53f494004d4495"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -413,9 +413,9 @@ version = "0.1.10"
 
 [[deps.ExtXYZ]]
 deps = ["AtomsBase", "PeriodicTable", "StaticArrays", "Unitful", "UnitfulAtomic", "extxyz_jll"]
-git-tree-sha1 = "067ff49e8755f291f1c5016623f680ee64dd41a0"
+git-tree-sha1 = "a43854157359e1487f481fcd2e67c3bb23738bf2"
 uuid = "352459e4-ddd7-4360-8937-99dcb397b478"
-version = "0.1.12"
+version = "0.1.13"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]
@@ -613,7 +613,7 @@ uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.4.0"
 
 [[deps.KineticaCore]]
-deps = ["BSON", "Catalyst", "Conda", "DataStructures", "Dates", "DelimitedFiles", "DifferentialEquations", "ExtXYZ", "LinearAlgebra", "Logging", "Measurements", "ProgressLogging", "PyCall", "PyPlot", "UUIDs"]
+deps = ["BSON", "Catalyst", "Conda", "DataStructures", "Dates", "DelimitedFiles", "DifferentialEquations", "ExtXYZ", "LinearAlgebra", "Logging", "Measurements", "ModelingToolkit", "ProgressLogging", "PyCall", "PyPlot", "StableHashTraits", "Statistics", "Symbolics", "UUIDs"]
 path = "../KineticaCore"
 uuid = "3847ce11-53ec-444b-aa85-3b6606472139"
 version = "0.1.0"
@@ -782,10 +782,22 @@ uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.2+0"
 
 [[deps.Measurements]]
-deps = ["Calculus", "LinearAlgebra", "Printf", "RecipesBase", "Requires"]
-git-tree-sha1 = "51d946d38d62709d6a2d37ea9bcc30c80c686801"
+deps = ["Calculus", "LinearAlgebra", "Printf", "Requires"]
+git-tree-sha1 = "bf645d369306c848b6e44e37a1e216b15468c4fc"
 uuid = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-version = "2.9.0"
+version = "2.10.0"
+
+    [deps.Measurements.extensions]
+    MeasurementsJunoExt = "Juno"
+    MeasurementsRecipesBaseExt = "RecipesBase"
+    MeasurementsSpecialFunctionsExt = "SpecialFunctions"
+    MeasurementsUnitfulExt = "Unitful"
+
+    [deps.Measurements.weakdeps]
+    Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1229,6 +1241,12 @@ weakdeps = ["ChainRulesCore"]
     [deps.SpecialFunctions.extensions]
     SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
 
+[[deps.StableHashTraits]]
+deps = ["Compat", "SHA", "Tables", "TupleTools"]
+git-tree-sha1 = "19df33ca14f24a3ad2df9e89124bd5f5cc8467a2"
+uuid = "c5dd0088-6c3f-4803-b00e-f31a60c170fa"
+version = "1.0.1"
+
 [[deps.Static]]
 deps = ["IfElse"]
 git-tree-sha1 = "f295e0a1da4ca425659c57441bcb59abb035a4bc"
@@ -1420,6 +1438,11 @@ deps = ["InteractiveUtils", "MacroTools", "Preferences"]
 git-tree-sha1 = "ea3e54c2bdde39062abf5a9758a23735558705e1"
 uuid = "781d530d-4396-4725-bb49-402e4bee1e77"
 version = "1.4.0"
+
+[[deps.TupleTools]]
+git-tree-sha1 = "155515ed4c4236db30049ac1495e2969cc06be9d"
+uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
+version = "1.4.3"
 
 [[deps.URIs]]
 git-tree-sha1 = "b7a5e99f24892b6824a954199a45e9ffcc1c70f0"
