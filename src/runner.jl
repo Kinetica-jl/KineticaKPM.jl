@@ -1,4 +1,8 @@
 """
+Data container for KPM initialisation arguments.
+
+Not intended to be user-accessible, instead called internally
+when constructing KPMRun.
 """
 struct KPMArgs
     model::String
@@ -14,6 +18,12 @@ struct KPMArgs
 end
 
 """
+    kpm = KPMRun(model_path)
+
+KPM runner for prediction of reaction activation energies.
+
+Handles instantiation of the underlying Scikit-Learn model
+in Python, and can be called to use this model for predictions.
 """
 mutable struct KPMRun
     model_path::String
@@ -43,6 +53,21 @@ mutable struct KPMRun
 end
 
 """
+    Ea = kpm(rd, sd[, rcount, rdir])
+
+Predicts activation energies using KPM.
+
+Assembles XYZ systems of reactant/product molecules, runs
+KPM and reads in its output.
+
+If `rcount` is not provided, predicts Ea for all reactions
+currently in `rd`. If it is provided, only predicts Ea for
+the specified reaction.
+
+If `rdir` is provided, saves all KPM inputs/outputs to this
+directory (which must exist before calling). Otherwise, does
+all IO within a temporary directory that is deleted once
+calculations are finished.
 """
 function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
@@ -84,8 +109,6 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
     return Ea    
 end
 
-"""
-"""
 function (self::KPMRun)(rd::RxData, sd::SpeciesData, rcount::Int; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info "Predicting Ea of reaction $rcount in $(calc_dir)"
