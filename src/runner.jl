@@ -36,7 +36,7 @@ mutable struct KPMRun
             "prods.xyz",
             "dH.txt",
             "preds.txt",
-            "both",
+            "forward",
             "True",
             "True",
             "True",
@@ -104,7 +104,7 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
     close(outfile)
     @info "Prediction complete.\n"
 
-    Ea = read_predictions(joinpath(calc_dir, "preds.txt"))
+    Ea = read_predictions(joinpath(calc_dir, "preds.txt")) .* Constants.kcal_to_J
 
     return Ea    
 end
@@ -138,7 +138,7 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData, rcount::Int; rdir::Union{St
     close(outfile)
     @info "Prediction complete.\n"
     
-    Ea = read_predictions(joinpath(calc_dir, "preds.txt"))
+    Ea = read_predictions(joinpath(calc_dir, "preds.txt")) .* Constants.kcal_to_J
 
     return Ea
 end
