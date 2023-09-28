@@ -69,11 +69,11 @@ function (calc::KPMBasicCalculator{Nothing, uType, tType})(; T::Number) where {u
     return k
 end
 
-function has_conditions(::KPMBasicCalculator, symbols::Vector{Symbol})
+function KineticaCore.has_conditions(::KPMBasicCalculator, symbols::Vector{Symbol})
     return all([sym in [:T] for sym in symbols])
 end
 
-allows_continuous(::KPMBasicCalculator) = true
+KineticaCore.allows_continuous(::KPMBasicCalculator) = true
 
 
 """
@@ -178,8 +178,8 @@ function (calc::KPMCollisionCalculator{Nothing, uType, tType})(; T::Number) wher
     return k
 end
 
-function has_conditions(::KPMCollisionCalculator, symbols::Vector{Symbol})
+function KineticaCore.has_conditions(::KPMCollisionCalculator, symbols::Vector{Symbol})
     return all([sym in [:T] for sym in symbols])
 end
 
-allows_continuous(::KPMCollisionCalculator) = true
+KineticaCore.allows_continuous(::KPMCollisionCalculator) = true

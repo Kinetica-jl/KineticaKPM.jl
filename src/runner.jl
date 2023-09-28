@@ -78,11 +78,19 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
     reac_molsys = []
     prod_molsys = []
     for rcount in 1:rd.nr
-        reac_xyzs = [sd.xyz[idx] for (i, idx) in enumerate(rd.id_reacs[rcount]) for _ in 1:rd.stoic_reacs[rcount][i]]
-        push!(reac_molsys, system_from_mols(reac_xyzs))
+        reac_xyzs = [deepcopy(sd.xyz[idx]) for (i, idx) in enumerate(rd.id_reacs[rcount]) for _ in 1:rd.stoic_reacs[rcount][i]]
+        if length(reac_xyzs) == 1
+            push!(reac_molsys, reac_xyzs[1])
+        else
+            push!(reac_molsys, system_from_mols(reac_xyzs))
+        end
     
-        prod_xyzs = [sd.xyz[idx] for (i, idx) in enumerate(rd.id_prods[rcount]) for _ in 1:rd.stoic_prods[rcount][i]]
-        push!(prod_molsys, system_from_mols(prod_xyzs))
+        prod_xyzs = [deepcopy(sd.xyz[idx]) for (i, idx) in enumerate(rd.id_prods[rcount]) for _ in 1:rd.stoic_prods[rcount][i]]
+        if length(prod_xyzs) == 1
+            push!(prod_molsys, prod_xyzs[1])
+        else
+            push!(prod_molsys, system_from_mols(prod_xyzs))
+        end
     end
     @info "Reactant/product systems optimised."
 
