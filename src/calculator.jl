@@ -20,30 +20,39 @@ Has support for dispatching with/without a maximum rate constant
 `k_max` and scaling by time unit `t_unit` (assuming rates are
 provided in units of /s).
 """
-struct KPMBasicCalculator{kmType, uType, tType} <: KineticaCore.AbstractKineticCalculator
+mutable struct KPMBasicCalculator{kmType, uType, tType} <: KineticaCore.AbstractKineticCalculator
     Ea::Vector{uType}
+    kpm::KPMRun
     k_max::kmType
     t_unit::String
     t_mult::tType
+    uncertainty::Bool
 end
 
 """
-    calculator = KPMBasicCalculator(rd, sd, kpm[, k_max, t_unit])
+    calculator = KPMBasicCalculator(kpm[, uncertainty, k_max, t_unit])
 
 Outer constructor method for basic KPM calculator.
 """
-function KPMBasicCalculator(rd::RxData, sd::SpeciesData, kpm::KPMRun;
+function KPMBasicCalculator(kpm::KPMRun;
         uncertainty::Bool=false,
         k_max::Union{Nothing, uType}=nothing, 
         t_unit::String="s") where {uType <: AbstractFloat}
 
-    Ea = kpm(rd, sd)
-    if !uncertainty
-        Ea = Measurements.value.(Ea)
-    end
-
+    EaType = uncertainty ? Measurement : Float64
     t_mult = tconvert(t_unit, "s")
-    return KPMBasicCalculator(Ea, k_max, t_unit, t_mult)
+    return KPMBasicCalculator(EaType[], kpm, k_max, t_unit, t_mult, uncertainty)
+end
+
+function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMBasicCalculator)
+    calc.Ea = calc.kpm(rd, sd)
+    if eltype(calc.Ea) <: Measurement && !calc.uncertainty
+        calc.Ea = Measurements.value.(calc.Ea)
+    end
+end
+
+function Base.splice!(calc::KPMBasicCalculator, rids::Vector{Int})
+    splice!(calc.Ea, rids)
 end
 
 """
@@ -109,48 +118,64 @@ struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaCore.Abst
     μ::Vector{uType}
     σ::Vector{uType}
     ρ::Vector{uType}
+    kpm::KPMRun
     k_max::kmType
     t_unit::String
     t_mult::tType
+    inert_species::Union{Nothing, Vector{String}}
     steric_factor::Symbol
+    uncertainty::Bool
 end
 
 """
-    calculator = KPMCollisionCalculator(rd, sd, kpm[, steric_type, k_max, t_unit])
+    calculator = KPMCollisionCalculator(kpm[, inert_species, steric_factor, uncertainty, k_max, t_unit])
 
 Outer constructor method for collision theory-based KPM calculator.
 
 Collision theory requires all reactions to result from a
 collision between two or more species, so unimolecular
-reactions require a collision partner. If `pars.inert_species`
+reactions require a collision partner. If `inert_species`
 has been set, the CRN will be modified to use this species as
 the collision partner. Otherwise, an average collision partner
 will be estimated from all species in the CRN and it will
 remain unmodified.
 """
-function KPMCollisionCalculator(rd::RxData, sd::SpeciesData,
-        pars::ODESimulationParams, kpm::KPMRun;
+function KPMCollisionCalculator(kpm::KPMRun;
+        inert_species::Union{Nothing, Vector{String}} = nothing,
         steric_factor::Symbol=:none,
         uncertainty::Bool=false,
-        k_max::Union{Nothing, uType}=nothing, 
-        t_unit::String="s") where {uType <: AbstractFloat}
+        k_max::Union{Nothing, kmType}=nothing, 
+        t_unit::String="s") where {kmType <: AbstractFloat}
 
-    if !isnothing(pars.inert_species)
+    EaType = uncertainty ? Measurement : Float64
+    uType = Float64 # May need a way for specifying this in future
+    t_mult = tconvert(t_unit, "s")
+
+    return KPMCollisionCalculator(EaType[], uType[], uType[], uType[],
+        kpm, k_max, t_unit, t_mult, inert_species, steric_factor, uncertainty)
+end
+
+function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionCalculator)
+    if !isnothing(calc.inert_species)
         @info "Inserting inert species into unimolecular reactions."
-        KineticaCore.insert_inert!(rd, sd, pars.inert_species)
+        KineticaCore.insert_inert!(rd, sd, calc.inert_species)
     end
 
-    Ea = kpm(rd, sd)
-    if !uncertainty
-        Ea = Measurements.value.(Ea)
+    calc.Ea = calc.kpm(rd, sd)
+    if eltype(calc.Ea) <: Measurement && !calc.uncertainty
+        calc.Ea = Measurements.value.(calc.Ea)
     end
 
     get_species_stats!(sd)
-    μ, σ = calc_collision_params(rd, sd)
-    ρ = calc_steric_factors(rd, sd, steric_factor)
-    t_mult = tconvert(t_unit, "s")
+    calc.μ, calc.σ = calc_collision_params(rd, sd)
+    calc.ρ = calc_steric_factors(rd, sd, calc.steric_factor)
+end
 
-    return KPMCollisionCalculator(Ea, μ, σ, ρ, k_max, t_unit, t_mult, steric_factor)
+function Base.splice!(calc::KPMCollisionCalculator, rids::Vector{Int})
+    splice!(calc.Ea, rids)
+    splice!(calc.μ, rids)
+    splice!(calc.σ, rids)
+    splice!(calc.ρ, rids)
 end
 
 """
