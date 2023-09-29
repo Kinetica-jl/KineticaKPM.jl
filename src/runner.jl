@@ -93,6 +93,7 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
         end
     end
     @info "Reactant/product systems optimised."
+    flush_log()
 
     write_frames(joinpath(calc_dir, "reacs.xyz"), reac_molsys)
     write_frames(joinpath(calc_dir, "prods.xyz"), prod_molsys)
@@ -101,6 +102,7 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
     writedlm(joinpath(calc_dir, "dH.txt"), vcat(dH_conv...))
 
     @info "Predicting Ea..."
+    flush_log()
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
     curr_dir = pwd()
@@ -111,6 +113,7 @@ function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing
     pysys.stdout = pysys.__stdout__
     close(outfile)
     @info "Prediction complete.\n"
+    flush_log()
 
     Ea = read_predictions(joinpath(calc_dir, "preds.txt")) .* Constants.kcal_to_J
 
