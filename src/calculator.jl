@@ -113,7 +113,7 @@ Has support for dispatching with/without a maximum rate constant
 `k_max` and scaling by time unit `t_unit` (assuming rates are
 provided in units of /s).
 """
-struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaCore.AbstractKineticCalculator
+mutable struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaCore.AbstractKineticCalculator
     Ea::Vector{EaType}
     μ::Vector{uType}
     σ::Vector{uType}
@@ -161,9 +161,11 @@ function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMColli
         KineticaCore.insert_inert!(rd, sd, calc.inert_species)
     end
 
-    calc.Ea = calc.kpm(rd, sd)
-    if eltype(calc.Ea) <: Measurement && !calc.uncertainty
-        calc.Ea = Measurements.value.(calc.Ea)
+    Ea = calc.kpm(rd, sd)
+    if eltype(Ea) <: Measurement && !calc.uncertainty
+        calc.Ea = Measurements.value.(Ea)
+    else
+        calc.Ea = Ea
     end
 
     get_species_stats!(sd)
