@@ -413,9 +413,9 @@ version = "0.1.10"
 
 [[deps.ExtXYZ]]
 deps = ["AtomsBase", "PeriodicTable", "StaticArrays", "Unitful", "UnitfulAtomic", "extxyz_jll"]
-git-tree-sha1 = "a43854157359e1487f481fcd2e67c3bb23738bf2"
+git-tree-sha1 = "067ff49e8755f291f1c5016623f680ee64dd41a0"
 uuid = "352459e4-ddd7-4360-8937-99dcb397b478"
-version = "0.1.13"
+version = "0.1.12"
 
 [[deps.FastBroadcast]]
 deps = ["ArrayInterface", "LinearAlgebra", "Polyester", "Static", "StaticArrayInterface", "StrideArraysCore"]

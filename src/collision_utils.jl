@@ -104,8 +104,8 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:basic})
             n_B = sd.xyz[rd.id_reacs[i][2]]["N_atoms"]
             r_B = sd.cache[:radii][rd.id_reacs[i][2]]
         end
-        α_A = n_A + (n_A - 1) * 5 * r_A
-        α_B = n_B + (n_B - 1) * 5 * r_B
+        α_A = n_A^2 + (n_A - 1) * 5 * r_A
+        α_B = n_B^2 + (n_B - 1) * 5 * r_B
         α = (α_A * α_B) / 100
 
         ρ[i] = 1 / (100 * α)
