@@ -124,6 +124,7 @@ mutable struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaC
     t_mult::tType
     inert_species::Union{Nothing, Vector{String}}
     steric_factor::Symbol
+    steric_factor_params::Union{Nothing, uType}
     uncertainty::Bool
 end
 
@@ -143,6 +144,7 @@ remain unmodified.
 function KPMCollisionCalculator(kpm::KPMRun;
         inert_species::Union{Nothing, Vector{String}} = nothing,
         steric_factor::Symbol=:none,
+        steric_factor_params::Union{Nothing, Float64}=nothing,
         uncertainty::Bool=false,
         k_max::Union{Nothing, kmType}=nothing, 
         t_unit::String="s") where {kmType <: AbstractFloat}
@@ -152,7 +154,8 @@ function KPMCollisionCalculator(kpm::KPMRun;
     t_mult = tconvert(t_unit, "s")
 
     return KPMCollisionCalculator(EaType[], uType[], uType[], uType[],
-        kpm, k_max, t_unit, t_mult, inert_species, steric_factor, uncertainty)
+        kpm, k_max, t_unit, t_mult, inert_species, steric_factor, 
+        steric_factor_params, uncertainty)
 end
 
 function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionCalculator)
@@ -170,7 +173,7 @@ function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMColli
 
     get_species_stats!(sd)
     calc.μ, calc.σ = calc_collision_params(rd, sd)
-    calc.ρ = calc_steric_factors(rd, sd, calc.steric_factor)
+    calc.ρ = calc_steric_factors(rd, sd, calc.steric_factor; params=calc.steric_factor_params)
 end
 
 function Base.splice!(calc::KPMCollisionCalculator, rids::Vector{Int})

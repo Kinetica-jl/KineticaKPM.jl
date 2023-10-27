@@ -58,14 +58,23 @@ end
 Calculates steric factors for all reactions in `rd`, using the requested steric factor function.
 
 Valid steric factors are
-* `:basic` - Calculates steric factors as `1/(α_A * α_B)`, where `α_i = n_i + 5r_i(n_i - 1)`.
+* `:basic` - Calculates steric factors as `1/(α_A * α_B)`, where `α_i = n_i² + 5r_i(n_i - 1)`.
+* `:exp` - Calculates steric factors as `1/(α_A * α_B)^β`, where `α_i = n_i² + 5r_i(n_i - 1)`. Requires passing a value of β via `params`
 * `:none` - Makes all steric factors equal to 1, removing them from the rate equation.
 """
-function calc_steric_factors(rd::RxData, sd::SpeciesData, steric_factor::Symbol)
-    if !(steric_factor in [:basic, :none])
+function calc_steric_factors(rd::RxData, sd::SpeciesData, steric_factor::Symbol; params=nothing)
+    if !(steric_factor in [:basic, :exp, :none])
         throw(ArgumentError("Unknown steric factor type: $steric_factor"))
     end
+
+    if steric_factor == :exp
+        if isnothing(params)
+            error("Steric factor :exp requires a value for beta, which must be passed through steric_factor_params.")
+        end
+        ρ = calc_steric_factors(rd, sd, Val(steric_factor), params)
+    else
         ρ = calc_steric_factors(rd, sd, Val(steric_factor))
+    end
     return ρ
 end
 
@@ -109,6 +118,41 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:basic})
         α = (α_A * α_B) / 100
 
         ρ[i] = 1 / (100 * α)
+    end
+
+    return ρ
+end
+
+"""
+    ρ = calc_steric_factors(rd, uniq_frags, Val(:exp), β)
+
+Calculates steric factors as `1/(α_A * α_B)^β`, where `α_i = n_i² + 5r_i(n_i - 1)`.
+"""
+function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:exp}, β::Float64)
+    n_avg = mean([sd.xyz[i]["N_atoms"] for i in 1:sd.n])
+    r_avg = mean(values(sd.cache[:radii]))
+    ρ = zeros(Float64, rd.nr)
+
+    for i in 1:rd.nr
+        n_A = sd.xyz[rd.id_reacs[i][1]]["N_atoms"]
+        r_A = sd.cache[:radii][rd.id_reacs[i][1]]
+        if length(rd.reacs[i]) == 1
+            if rd.stoic_reacs[i][1] == 1
+                n_B = n_avg
+                r_B = r_avg
+            else
+                n_B = n_A
+                r_B = r_A
+            end
+        else
+            n_B = sd.xyz[rd.id_reacs[i][2]]["N_atoms"]
+            r_B = sd.cache[:radii][rd.id_reacs[i][2]]
+        end
+        α_A = n_A^2 + (n_A - 1) * 5 * r_A
+        α_B = n_B^2 + (n_B - 1) * 5 * r_B
+        α = (α_A * α_B)^β
+
+        ρ[i] = 1 / α
     end
 
     return ρ
