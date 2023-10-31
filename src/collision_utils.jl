@@ -273,3 +273,19 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:dlogistic}, β_
 
     return ρ
 end
+
+
+"""
+"""
+function calc_entropy_change(rd::RxData, sd::SpeciesData)
+    ΔN_m = [sum(rd.stoic_prods[i]) - sum(rd.stoic_reacs[i]) for i in 1:rd.nr]
+
+    ΔS_t = zeros(rd.nr)
+    for i in 1:rd.nr
+        mass_term = prod([sd.cache[:weights][spec] for spec in rd.id_reacs[i]]) / prod([sd.cache[:weights][spec] for spec in rd.id_prods[i]])
+        ΔS_t[i] = ΔN_m[i] * (3*Constants.R*log(ℯ, 2*pi*Constants.k_b/(Constants.h^2))/2 +
+                  Constants.R*log(ℯ, 1000.0) + 5*Constants.R/2) + 3*Constants.R*mass_term/2
+    end
+
+    return ΔS_t, ΔN_m
+end

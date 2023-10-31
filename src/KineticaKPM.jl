@@ -17,7 +17,6 @@ include("runner.jl")
 export KPMRun
 include("collision_utils.jl")
 include("calculator.jl")
-export KPMBasicCalculator, KPMCollisionCalculator
-
+export KPMBasicCalculator, KPMCollisionCalculator, KPMCollisionEntropyCalculator
 
 end
