@@ -124,7 +124,7 @@ mutable struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaC
     t_mult::tType
     inert_species::Union{Nothing, Vector{String}}
     steric_factor::Symbol
-    steric_factor_params::Union{Nothing, uType}
+    steric_factor_params::Union{Nothing, uType, Vector{uType}}
     uncertainty::Bool
 end
 
@@ -144,7 +144,7 @@ remain unmodified.
 function KPMCollisionCalculator(kpm::KPMRun;
         inert_species::Union{Nothing, Vector{String}} = nothing,
         steric_factor::Symbol=:none,
-        steric_factor_params::Union{Nothing, Float64}=nothing,
+        steric_factor_params::Union{Nothing, Float64, Vector{Float64}}=nothing,
         uncertainty::Bool=false,
         k_max::Union{Nothing, kmType}=nothing, 
         t_unit::String="s") where {kmType <: AbstractFloat}
@@ -186,7 +186,7 @@ end
 """
     rates = calculator(; T)
 
-Calculate rates with basic KPM calculator.
+Calculate rates with collision theory-based KPM calculator.
 
 Requires temperature (`T`) as a keyword argument.
 
