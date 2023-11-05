@@ -53,12 +53,12 @@ mutable struct KPMRun
 end
 
 """
-    Ea = kpm(rd, sd[, rcount, rdir])
+    Ea = kpm(rd[, rcount, rdir])
 
 Predicts activation energies using KPM.
 
-Assembles XYZ systems of reactant/product molecules, runs
-KPM and reads in its output.
+Assembles joines SMILES of arectants and products, creates
+reaction difference fingerprints and performs predictions.
 
 If `rcount` is not provided, predicts Ea for all reactions
 currently in `rd`. If it is provided, only predicts Ea for
@@ -69,89 +69,69 @@ directory (which must exist before calling). Otherwise, does
 all IO within a temporary directory that is deleted once
 calculations are finished.
 """
-function (self::KPMRun)(rd::RxData, sd::SpeciesData; rdir::Union{String, Nothing}=nothing)
+function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
-    @info "Predicting Ea of all reactions in $(calc_dir)"
-    
-    @info "Optimising all reactant/product systems."
-    flush_log()
-    reac_molsys = []
-    prod_molsys = []
-    for rcount in 1:rd.nr
-        reac_xyzs = [deepcopy(sd.xyz[idx]) for (i, idx) in enumerate(rd.id_reacs[rcount]) for _ in 1:rd.stoic_reacs[rcount][i]]
-        if length(reac_xyzs) == 1
-            push!(reac_molsys, reac_xyzs[1])
-        else
-            push!(reac_molsys, system_from_mols(reac_xyzs))
-        end
-    
-        prod_xyzs = [deepcopy(sd.xyz[idx]) for (i, idx) in enumerate(rd.id_prods[rcount]) for _ in 1:rd.stoic_prods[rcount][i]]
-        if length(prod_xyzs) == 1
-            push!(prod_molsys, prod_xyzs[1])
-        else
-            push!(prod_molsys, system_from_mols(prod_xyzs))
-        end
-    end
-    @info "Reactant/product systems optimised."
-    flush_log()
+    @info " - Predicting Ea of all reactions in $(calc_dir)"
 
-    write_frames(joinpath(calc_dir, "reacs.xyz"), reac_molsys)
-    write_frames(joinpath(calc_dir, "prods.xyz"), prod_molsys)
-
-    dH_conv = rd.dH .* Constants.eV_to_kcal_per_mol
-    writedlm(joinpath(calc_dir, "dH.txt"), vcat(dH_conv...))
-
-    @info "Predicting Ea..."
-    flush_log()
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
-    curr_dir = pwd()
-    cd(calc_dir)
-    diffs = self.predictor.process_xyzs()
-    self.predictor.predict(diffs)
-    cd(curr_dir)
+
+    rsmi = [join(sort(reduce(vcat, [[reacs[i] for _ in 1:rstoics[i]] for i in axes(reacs, 1)])), ".") for (reacs, rstoics) in zip(rd.reacs, rd.stoic_reacs)]
+    self.predictor.rsmi = rsmi
+    rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
+    psmi = [join(sort(reduce(vcat, [[prods[i] for _ in 1:pstoics[i]] for i in axes(prods, 1)])), ".") for (prods, pstoics) in zip(rd.prods, rd.stoic_prods)]
+    self.predictor.psmi = psmi
+    pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
+    self.predictor.dH_arr = rd.dH .* Constants.eV_to_kcal_per_mol
+    self.predictor.num_reacs = rd.nr
+
+    diffs = kpm_utils.descriptors.calc_diffs(rd.nr, self.predictor.descriptor_type, rmol, pmol, 
+        self.predictor.dH_arr, self.predictor.morgan_radius, self.predictor.morgan_num_bits)
+    println(self.predictor.predict(diffs))
+    Ea, uncerts = self.predictor.predict(diffs)
+
     pysys.stdout = pysys.__stdout__
     close(outfile)
-    @info "Prediction complete.\n"
+    @info " - Prediction complete.\n"
     flush_log()
 
-    Ea = read_predictions(joinpath(calc_dir, "preds.txt")) .* Constants.kcal_to_J
+    Ea *= Constants.kcal_to_J
+    uncerts *= Constants.kcal_to_J
+    Ea_final = measurement.(Ea, uncerts)
 
-    return Ea    
+    return Ea_final
 end
 
-function (self::KPMRun)(rd::RxData, sd::SpeciesData, rcount::Int; rdir::Union{String, Nothing}=nothing)
+function (self::KPMRun)(rd::RxData, rcount::Int; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info "Predicting Ea of reaction $rcount in $(calc_dir)"
 
-    reac_xyzs = [sd.xyz[idx] for (i, idx) in enumerate(rd.id_reacs[rcount]) for _ in 1:rd.stoic_reacs[rcount][i]]
-    system_from_mols(reac_xyzs, joinpath(calc_dir, "reacs.xyz"))
-    @info "Optimised reactant system."
-
-    prod_xyzs = [sd.xyz[idx] for (i, idx) in enumerate(rd.id_prods[rcount]) for _ in 1:rd.stoic_prods[rcount][i]]
-    system_from_mols(prod_xyzs, joinpath(calc_dir, "prods.xyz"))
-    @info "Optimised product system."
-
-    dH = rd.dH[rcount] * Constants.eV_to_kcal_per_mol
-    open(joinpath(calc_dir, "dH.txt"), "w") do f
-        write(f, dH)
-    end
-
-    @info "Predicting Ea..."
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
-    curr_dir = pwd()
-    cd(calc_dir)
-    diffs = self.predictor.process_xyzs()
-    self.predictor.predict(diffs)
-    cd(curr_dir)
+
+    rsmi = [join(sort(reduce(vcat, [[rd.reacs[rcount][i] for _ in 1:rd.stoic_reacs[rcount][i]] for i in axes(rd.reacs[rcount], 1)])), ".")]
+    self.predictor.rsmi = rsmi
+    rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
+    psmi = [join(sort(reduce(vcat, [[rd.prods[rcount][i] for _ in 1:rd.stoic_prods[rcount][i]] for i in axes(rd.prods[rcount], 1)])), ".")]
+    self.predictor.psmi = psmi
+    pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
+    self.predictor.dH_arr = [rd.dH[rcount] .* Constants.eV_to_kcal_per_mol]
+    self.predictor.num_reacs = 1
+
+    diff = kpm_utils.descriptors.calc_diffs(1, self.predictor.descriptor_type, rmol, pmol, 
+        self.predictor.dH_arr, self.predictor.morgan_radius, self.predictor.morgan_num_bits)
+    Ea, uncerts = self.predictor.predict(diff)
+
     pysys.stdout = pysys.__stdout__
     close(outfile)
     @info "Prediction complete.\n"
+    flush_log()
     
-    Ea = read_predictions(joinpath(calc_dir, "preds.txt")) .* Constants.kcal_to_J
+    Ea *= Constants.kcal_to_J
+    uncerts *= Constants.kcal_to_J
+    Ea_final = measurement(Ea[1], uncerts[1])
 
-    return Ea
+    return Ea_final
 end
 
 
