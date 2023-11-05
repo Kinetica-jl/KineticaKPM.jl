@@ -9,7 +9,7 @@ struct KPMArgs
     reactant::String
     product::String
     enthalpy::String
-    outfile::String
+    outfile::Union{String, Nothing}
     direction::String
     uncertainty::String
     fix_radicals::String
@@ -35,7 +35,7 @@ mutable struct KPMRun
             "reacs.xyz",
             "prods.xyz",
             "dH.txt",
-            "preds.txt",
+            nothing,
             "forward",
             "True",
             "True",
@@ -72,6 +72,7 @@ calculations are finished.
 function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info " - Predicting Ea of all reactions in $(calc_dir)"
+    flush_log()
 
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
@@ -104,6 +105,7 @@ end
 function (self::KPMRun)(rd::RxData, rcount::Int; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info "Predicting Ea of reaction $rcount in $(calc_dir)"
+    flush_log()
 
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
