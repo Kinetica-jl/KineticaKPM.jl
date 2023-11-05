@@ -87,7 +87,6 @@ function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
 
     diffs = kpm_utils.descriptors.calc_diffs(rd.nr, self.predictor.descriptor_type, rmol, pmol, 
         self.predictor.dH_arr, self.predictor.morgan_radius, self.predictor.morgan_num_bits)
-    println(self.predictor.predict(diffs))
     Ea, uncerts = self.predictor.predict(diffs)
 
     pysys.stdout = pysys.__stdout__
