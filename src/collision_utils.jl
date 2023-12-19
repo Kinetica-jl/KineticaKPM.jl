@@ -21,7 +21,7 @@ function calc_collision_params(rd::RxData, sd::SpeciesData; easy_units::Bool=tru
     μ_AB = zeros(Float64, rd.nr)
     d_AB = zeros(Float64, rd.nr)
     for i in 1:rd.nr
-        if length(rd.reacs[i]) == 1
+        if length(rd.id_reacs[i]) == 1
             m_A = sd.cache[:weights][rd.id_reacs[i][1]]
             r_A = sd.cache[:radii][rd.id_reacs[i][1]]
             if rd.stoic_reacs[i][1] == 1
@@ -34,9 +34,9 @@ function calc_collision_params(rd::RxData, sd::SpeciesData; easy_units::Bool=tru
             μ_AB[i] = (m_A * m_B)/(m_A + m_B)
             d_AB[i] = r_A + r_B
         else
-            m_reacs = [sd.cache[:weights][rd.id_reacs[i][j]] for j in 1:length(rd.reacs[i])]
+            m_reacs = [sd.cache[:weights][rd.id_reacs[i][j]] for j in 1:length(rd.id_reacs[i])]
             μ_AB[i] = prod(m_reacs)/sum(m_reacs)
-            d_AB[i] = sum([sd.cache[:radii][rd.id_reacs[i][j]] for j in 1:length(rd.reacs[i])])
+            d_AB[i] = sum([sd.cache[:radii][rd.id_reacs[i][j]] for j in 1:length(rd.id_reacs[i])])
         end
     end
 
@@ -108,7 +108,7 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:basic})
     for i in 1:rd.nr
         n_A = sd.xyz[rd.id_reacs[i][1]]["N_atoms"]
         r_A = sd.cache[:radii][rd.id_reacs[i][1]]
-        if length(rd.reacs[i]) == 1
+        if length(rd.id_reacs[i]) == 1
             if rd.stoic_reacs[i][1] == 1
                 n_B = n_avg
                 r_B = r_avg
@@ -143,7 +143,7 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:exp}, β::Float
     for i in 1:rd.nr
         n_A = sd.xyz[rd.id_reacs[i][1]]["N_atoms"]
         r_A = sd.cache[:radii][rd.id_reacs[i][1]]
-        if length(rd.reacs[i]) == 1
+        if length(rd.id_reacs[i]) == 1
             if rd.stoic_reacs[i][1] == 1
                 n_B = n_avg
                 r_B = r_avg
@@ -190,7 +190,7 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:logistic}, β::
     for i in 1:rd.nr
         n_A = sd.xyz[rd.id_reacs[i][1]]["N_atoms"]
         r_A = sd.cache[:radii][rd.id_reacs[i][1]]
-        if length(rd.reacs[i]) == 1
+        if length(rd.id_reacs[i]) == 1
             if rd.stoic_reacs[i][1] == 1
                 n_B = n_avg
                 r_B = r_avg
@@ -249,7 +249,7 @@ function calc_steric_factors(rd::RxData, sd::SpeciesData, ::Val{:dlogistic}, β_
 
         n_A = sd.xyz[rd.id_reacs[i][1]]["N_atoms"]
         r_A = sd.cache[:radii][rd.id_reacs[i][1]]
-        if length(rd.reacs[i]) == 1
+        if length(rd.id_reacs[i]) == 1
             if rd.stoic_reacs[i][1] == 1
                 n_B = n_avg
                 r_B = r_avg

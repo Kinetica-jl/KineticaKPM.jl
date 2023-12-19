@@ -69,7 +69,7 @@ directory (which must exist before calling). Otherwise, does
 all IO within a temporary directory that is deleted once
 calculations are finished.
 """
-function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
+function (self::KPMRun)(sd::SpeciesData, rd::RxData; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info " - Predicting Ea of all reactions in $(calc_dir)"
     flush_log()
@@ -77,10 +77,10 @@ function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
 
-    rsmi = [join(sort(reduce(vcat, [[reacs[i] for _ in 1:rstoics[i]] for i in axes(reacs, 1)])), ".") for (reacs, rstoics) in zip(rd.reacs, rd.stoic_reacs)]
+    rsmi = [join(sort(reduce(vcat, [[sd.toStr[rids[i]] for _ in 1:rstoics[i]] for i in axes(rids, 1)])), ".") for (rids, rstoics) in zip(rd.id_reacs, rd.stoic_reacs)]
     self.predictor.rsmi = rsmi
     rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
-    psmi = [join(sort(reduce(vcat, [[prods[i] for _ in 1:pstoics[i]] for i in axes(prods, 1)])), ".") for (prods, pstoics) in zip(rd.prods, rd.stoic_prods)]
+    psmi = [join(sort(reduce(vcat, [[sd.toStr[pids[i]] for _ in 1:pstoics[i]] for i in axes(pids, 1)])), ".") for (pids, pstoics) in zip(rd.id_prods, rd.stoic_prods)]
     self.predictor.psmi = psmi
     pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
     self.predictor.dH_arr = rd.dH .* Constants.eV_to_kcal_per_mol
@@ -102,7 +102,7 @@ function (self::KPMRun)(rd::RxData; rdir::Union{String, Nothing}=nothing)
     return Ea_final
 end
 
-function (self::KPMRun)(rd::RxData, rcount::Int; rdir::Union{String, Nothing}=nothing)
+function (self::KPMRun)(sd::SpeciesData, rd::RxData, rcount::Int; rdir::Union{String, Nothing}=nothing)
     calc_dir = isnothing(rdir) ? mktempdir(; prefix="kinetica_kpm_") : rdir
     @info "Predicting Ea of reaction $rcount in $(calc_dir)"
     flush_log()
@@ -110,10 +110,10 @@ function (self::KPMRun)(rd::RxData, rcount::Int; rdir::Union{String, Nothing}=no
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
     pysys.stdout = PyTextIO(outfile)
 
-    rsmi = [join(sort(reduce(vcat, [[rd.reacs[rcount][i] for _ in 1:rd.stoic_reacs[rcount][i]] for i in axes(rd.reacs[rcount], 1)])), ".")]
+    rsmi = [join(sort(reduce(vcat, [[sd.toStr[rd.id_reacs[rcount][i]] for _ in 1:rd.stoic_reacs[rcount][i]] for i in axes(rd.id_reacs[rcount], 1)])), ".")]
     self.predictor.rsmi = rsmi
     rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
-    psmi = [join(sort(reduce(vcat, [[rd.prods[rcount][i] for _ in 1:rd.stoic_prods[rcount][i]] for i in axes(rd.prods[rcount], 1)])), ".")]
+    psmi = [join(sort(reduce(vcat, [[sd.toStr[rd.id_prods[rcount][i]] for _ in 1:rd.stoic_prods[rcount][i]] for i in axes(rd.id_prods[rcount], 1)])), ".")]
     self.predictor.psmi = psmi
     pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
     self.predictor.dH_arr = [rd.dH[rcount] .* Constants.eV_to_kcal_per_mol]

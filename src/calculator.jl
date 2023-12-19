@@ -45,7 +45,7 @@ function KPMBasicCalculator(kpm::KPMRun;
 end
 
 function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMBasicCalculator)
-    calc.Ea = calc.kpm(rd)
+    calc.Ea = calc.kpm(sd, rd)
     if eltype(calc.Ea) <: Measurement && !calc.uncertainty
         calc.Ea = Measurements.value.(calc.Ea)
     end
@@ -164,7 +164,7 @@ function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMColli
         KineticaCore.insert_inert!(rd, sd, calc.inert_species)
     end
 
-    Ea = calc.kpm(rd)
+    Ea = calc.kpm(sd, rd)
     if eltype(Ea) <: Measurement && !calc.uncertainty
         calc.Ea = Measurements.value.(Ea)
     else
@@ -290,7 +290,7 @@ function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMColli
         KineticaCore.insert_inert!(rd, sd, calc.inert_species)
     end
 
-    Ea = calc.kpm(rd)
+    Ea = calc.kpm(sd, rd)
     if eltype(Ea) <: Measurement && !calc.uncertainty
         calc.Ea = Measurements.value.(Ea)
     else
