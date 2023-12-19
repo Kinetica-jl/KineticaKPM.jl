@@ -248,7 +248,7 @@ mutable struct KPMCollisionEntropyCalculator{kmType, EaType, uType, tType} <: Ki
     μ::Vector{uType}
     σ::Vector{uType}
     ΔS_t::Vector{uType}
-    ΔN_m::Vector{Int}
+    entropy_T_mask::Vector{Int}
     kpm::KPMRun
     k_max::kmType
     t_unit::String
@@ -299,7 +299,7 @@ function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMColli
 
     get_species_stats!(sd)
     calc.μ, calc.σ = calc_collision_params(rd, sd)
-    calc.ΔS_t, calc.ΔN_m = calc_entropy_change(rd, sd)
+    calc.ΔS_t, calc.entropy_T_mask = calc_entropy_change(rd, sd)
 end
 
 function Base.splice!(calc::KPMCollisionEntropyCalculator, rids::Vector{Int})
@@ -324,8 +324,8 @@ Automatically dispatches to a method with correct formula for
 function (calc::KPMCollisionEntropyCalculator{uType, uType, tType})(; T::Number) where {uType, tType}
     k_b_dm = Constants.k_b * 1000
 
-    entropic_temperature = 3*Constants.R*log(ℯ, T)/2
-    ΔS_t = calc.ΔS_t .+ (calc.ΔN_m * entropic_temperature)
+    entropic_temperature = -3*Constants.R*log(ℯ, T)/2
+    ΔS_t = calc.ΔS_t .+ (calc.entropy_T_mask * entropic_temperature)
     
     k_r = calc.σ .* sqrt.((8*k_b_dm*T)./(pi*calc.μ)) .* exp.(-calc.Ea / (Constants.R * T)) .* exp.(ΔS_t / Constants.R) * Constants.N_A^2 * calc.t_mult
     return 1.0 ./ ((1.0 / calc.k_max) .+ (1.0 ./ k_r))
@@ -334,8 +334,8 @@ end
 function (calc::KPMCollisionEntropyCalculator{Nothing, uType, tType})(; T::Number) where {uType, tType}
     k_b_dm = Constants.k_b * 1000
     
-    entropic_temperature = 3*Constants.R*log(ℯ, T)/2
-    ΔS_t = calc.ΔS_t .+ (calc.ΔN_m * entropic_temperature)
+    entropic_temperature = -3*Constants.R*log(ℯ, T)/2
+    ΔS_t = calc.ΔS_t .+ (calc.entropy_T_mask * entropic_temperature)
     
     k = calc.σ .* sqrt.((8*k_b_dm*T)./(pi*calc.μ)) .* exp.(-calc.Ea / (Constants.R * T)) .* exp.(ΔS_t / Constants.R) * Constants.N_A^2 * calc.t_mult
     return k

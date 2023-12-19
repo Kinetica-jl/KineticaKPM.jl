@@ -278,14 +278,18 @@ end
 """
 """
 function calc_entropy_change(rd::RxData, sd::SpeciesData)
-    ΔN_m = [sum(rd.stoic_prods[i]) - sum(rd.stoic_reacs[i]) for i in 1:rd.nr]
+    mask = [sum(rd.stoic_prods[i]) - sum(rd.stoic_reacs[i]) <= 0 ? 1 : 0 for i in 1:rd.nr]
 
     ΔS_t = zeros(rd.nr)
     for i in 1:rd.nr
-        mass_term = prod([sd.cache[:weights][spec] for spec in rd.id_reacs[i]]) / prod([sd.cache[:weights][spec] for spec in rd.id_prods[i]])
-        ΔS_t[i] = ΔN_m[i] * (3*Constants.R*log(ℯ, 2*pi*Constants.k_b/(Constants.h^2))/2 +
-                  Constants.R*log(ℯ, 1000.0) + 5*Constants.R/2) + 3*Constants.R*mass_term/2
+        if mask[i] == 0 continue end
+        reacs = reduce(vcat, [[rd.id_reacs[i][j] for _ in 1:rd.stoic_reacs[i][j]] for j in 1:length(rd.stoic_reacs[i])])
+        m_reacs = [sd.cache[:weights][spec] for spec in reacs]
+        # ΔS_t[i] = 3*Constants.R*log(ℯ, 2*pi*prod(m_reacs)*Constants.k_b/(sum(m_reacs)*Constants.h^2))/2 +
+        #           Constants.R*log(ℯ, 1000.0) + 5*Constants.R/2
+        ΔS_t[i] = 3*Constants.R*log(ℯ, (sum(m_reacs)*Constants.h^2)/(2*pi*prod(m_reacs)*Constants.k_b))/2 -
+                  Constants.R*log(ℯ, 1000.0) - 5*Constants.R/2
     end
 
-    return ΔS_t, ΔN_m
+    return ΔS_t, mask
 end
