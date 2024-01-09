@@ -20,7 +20,7 @@ Has support for dispatching with/without a maximum rate constant
 `k_max` and scaling by time unit `t_unit` (assuming rates are
 provided in units of /s).
 """
-mutable struct KPMBasicCalculator{kmType, uType, tType} <: KineticaCore.AbstractKineticCalculator
+mutable struct KPMBasicCalculator{kmType, uType, tType} <: Kinetica.AbstractKineticCalculator
     Ea::Vector{uType}
     kpm::KPMRun
     k_max::kmType
@@ -44,7 +44,7 @@ function KPMBasicCalculator(kpm::KPMRun;
     return KPMBasicCalculator(EaType[], kpm, k_max, t_unit, t_mult, uncertainty)
 end
 
-function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMBasicCalculator)
+function Kinetica.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMBasicCalculator)
     calc.Ea = calc.kpm(sd, rd)
     if eltype(calc.Ea) <: Measurement && !calc.uncertainty
         calc.Ea = Measurements.value.(calc.Ea)
@@ -78,11 +78,11 @@ function (calc::KPMBasicCalculator{Nothing, uType, tType})(; T::Number) where {u
     return k
 end
 
-function KineticaCore.has_conditions(::KPMBasicCalculator, symbols::Vector{Symbol})
+function Kinetica.has_conditions(::KPMBasicCalculator, symbols::Vector{Symbol})
     return all([sym in [:T] for sym in symbols])
 end
 
-KineticaCore.allows_continuous(::KPMBasicCalculator) = true
+Kinetica.allows_continuous(::KPMBasicCalculator) = true
 
 
 """
@@ -113,7 +113,7 @@ Has support for dispatching with/without a maximum rate constant
 `k_max` and scaling by time unit `t_unit` (assuming rates are
 provided in units of /s).
 """
-mutable struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: KineticaCore.AbstractKineticCalculator
+mutable struct KPMCollisionCalculator{kmType, EaType, uType, tType} <: Kinetica.AbstractKineticCalculator
     Ea::Vector{EaType}
     μ::Vector{uType}
     σ::Vector{uType}
@@ -158,10 +158,10 @@ function KPMCollisionCalculator(kpm::KPMRun;
         steric_factor_params, uncertainty)
 end
 
-function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionCalculator)
+function Kinetica.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionCalculator)
     if !isnothing(calc.inert_species)
         @info "Inserting inert species into unimolecular reactions."
-        KineticaCore.insert_inert!(rd, sd, calc.inert_species)
+        Kinetica.insert_inert!(rd, sd, calc.inert_species)
     end
 
     Ea = calc.kpm(sd, rd)
@@ -208,11 +208,11 @@ function (calc::KPMCollisionCalculator{Nothing, uType, tType})(; T::Number) wher
     return k
 end
 
-function KineticaCore.has_conditions(::KPMCollisionCalculator, symbols::Vector{Symbol})
+function Kinetica.has_conditions(::KPMCollisionCalculator, symbols::Vector{Symbol})
     return all([sym in [:T] for sym in symbols])
 end
 
-KineticaCore.allows_continuous(::KPMCollisionCalculator) = true
+Kinetica.allows_continuous(::KPMCollisionCalculator) = true
 
 
 """
@@ -243,7 +243,7 @@ Has support for dispatching with/without a maximum rate constant
 `k_max` and scaling by time unit `t_unit` (assuming rates are
 provided in units of /s).
 """
-mutable struct KPMCollisionEntropyCalculator{kmType, EaType, uType, tType} <: KineticaCore.AbstractKineticCalculator
+mutable struct KPMCollisionEntropyCalculator{kmType, EaType, uType, tType} <: Kinetica.AbstractKineticCalculator
     Ea::Vector{EaType}
     μ::Vector{uType}
     σ::Vector{uType}
@@ -284,10 +284,10 @@ function KPMCollisionEntropyCalculator(kpm::KPMRun;
         kpm, k_max, t_unit, t_mult, inert_species, uncertainty)
 end
 
-function KineticaCore.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionEntropyCalculator)
+function Kinetica.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMCollisionEntropyCalculator)
     if !isnothing(calc.inert_species)
         @info "Inserting inert species into unimolecular reactions."
-        KineticaCore.insert_inert!(rd, sd, calc.inert_species)
+        Kinetica.insert_inert!(rd, sd, calc.inert_species)
     end
 
     Ea = calc.kpm(sd, rd)
@@ -341,8 +341,8 @@ function (calc::KPMCollisionEntropyCalculator{Nothing, uType, tType})(; T::Numbe
     return k
 end
 
-function KineticaCore.has_conditions(::KPMCollisionEntropyCalculator, symbols::Vector{Symbol})
+function Kinetica.has_conditions(::KPMCollisionEntropyCalculator, symbols::Vector{Symbol})
     return all([sym in [:T] for sym in symbols])
 end
 
-KineticaCore.allows_continuous(::KPMCollisionEntropyCalculator) = false
+Kinetica.allows_continuous(::KPMCollisionEntropyCalculator) = false
