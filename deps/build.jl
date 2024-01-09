@@ -45,4 +45,4 @@ Conda.pip_interop(true)
 Conda.pip("install", ["--no-deps", "-e", kpmdir])
 @info "Python setup complete."
 
-@info string("KineticaKPM setup complete.")
+@info string("KineticaKPM.jl setup complete.")

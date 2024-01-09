@@ -1,8 +1,7 @@
 module KineticaKPM
 
-using Reexport
-@reexport using KineticaCore
-Constants = KineticaCore.Constants
+using Kinetica
+Constants = Kinetica.Constants
 
 using Logging
 using PyCall
@@ -11,7 +10,7 @@ using Measurements
 using DelimitedFiles
 using Statistics
 
-const version = VersionNumber(0, 2, 1)
+const version = VersionNumber(0, 3, 0)
 const rdChem = PyNULL()
 const kpm_utils = PyNULL()
 function __init__()
