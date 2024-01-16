@@ -45,9 +45,11 @@ function KPMBasicCalculator(kpm::KPMRun;
 end
 
 function Kinetica.setup_network!(sd::SpeciesData, rd::RxData, calc::KPMBasicCalculator)
-    calc.Ea = calc.kpm(sd, rd)
-    if eltype(calc.Ea) <: Measurement && !calc.uncertainty
-        calc.Ea = Measurements.value.(calc.Ea)
+    Ea = calc.kpm(sd, rd)
+    if eltype(Ea) <: Measurement && !calc.uncertainty
+        calc.Ea = Measurements.value.(Ea)
+    else
+        calc.Ea = Ea
     end
 end
 
