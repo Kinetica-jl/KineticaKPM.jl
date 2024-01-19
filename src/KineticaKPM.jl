@@ -10,7 +10,7 @@ using Measurements
 using DelimitedFiles
 using Statistics
 
-const version = VersionNumber(0, 3, 0)
+const version = VersionNumber(0, 3, 1)
 const rdChem = PyNULL()
 const kpm_utils = PyNULL()
 function __init__()
