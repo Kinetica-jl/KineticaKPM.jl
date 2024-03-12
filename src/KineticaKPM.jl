@@ -1,3 +1,8 @@
+"""
+KineticaKPM.jl
+
+UK Ministry of Defence © Crown Owned Copyright 2024/AWE​
+"""
 module KineticaKPM
 
 using Kinetica
