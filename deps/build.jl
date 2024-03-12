@@ -37,12 +37,17 @@ end
 flush_log()
 
 # Ensure the Conda environment has the neccessary dependencies.
-@info "Setting up Python dependencies..."
-flush_log()
-kpmdeps = readlines(joinpath(kpmdir, "requirements.txt"))
-Conda.add(kpmdeps, channel="conda-forge")
-Conda.pip_interop(true)
-Conda.pip("install", ["--no-deps", "-e", kpmdir])
-@info "Python setup complete."
+ignore_python_deps = lowercase(get(ENV, "KINETICA_BUILD_IGNORE_CONDA", "TRUE"))
+if ignore_python_deps == "true"
+    @info "KINETICA_BUILD_IGNORE_CONDA is TRUE, ignoring Python dependencies."
+else
+    @info "Setting up Python dependencies..."
+    flush_log()
+    kpmdeps = readlines(joinpath(kpmdir, "requirements.txt"))
+    Conda.add(kpmdeps, channel="conda-forge")
+    Conda.pip_interop(true)
+    Conda.pip("install", ["--no-deps", "-e", kpmdir])
+    @info "Python setup complete."
+end
 
 @info string("KineticaKPM.jl setup complete.")
