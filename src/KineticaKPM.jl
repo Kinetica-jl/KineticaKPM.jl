@@ -15,7 +15,7 @@ using Measurements
 using DelimitedFiles
 using Statistics
 
-const version = VersionNumber(0, 4, 0)
+const version = VersionNumber(0, 4, 1)
 const rdChem = PythonCall.pynew()
 const kpm_utils = PythonCall.pynew()
 const pysys = PythonCall.pynew()
