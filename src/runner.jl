@@ -27,7 +27,7 @@ in Python, and can be called to use this model for predictions.
 """
 mutable struct KPMRun
     model_path::String
-    predictor::PyObject
+    predictor::Py
 
     function KPMRun(model_path)
         args = KPMArgs(
@@ -75,15 +75,15 @@ function (self::KPMRun)(sd::SpeciesData, rd::RxData; rdir::Union{String, Nothing
     flush_log()
 
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
-    pysys.stdout = PyTextIO(outfile)
+    pysys.stdout = outfile
 
     rsmi = [join(sort(reduce(vcat, [[sd.toStr[rids[i]] for _ in 1:rstoics[i]] for i in axes(rids, 1)])), ".") for (rids, rstoics) in zip(rd.id_reacs, rd.stoic_reacs)]
-    self.predictor.rsmi = rsmi
+    self.predictor.rsmi = pylist(rsmi)
     rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
     psmi = [join(sort(reduce(vcat, [[sd.toStr[pids[i]] for _ in 1:pstoics[i]] for i in axes(pids, 1)])), ".") for (pids, pstoics) in zip(rd.id_prods, rd.stoic_prods)]
-    self.predictor.psmi = psmi
+    self.predictor.psmi = pylist(psmi)
     pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
-    self.predictor.dH_arr = rd.dH .* Constants.eV_to_kcal_per_mol
+    self.predictor.dH_arr = pylist(rd.dH .* Constants.eV_to_kcal_per_mol)
     self.predictor.num_reacs = rd.nr
 
     diffs = kpm_utils.descriptors.calc_diffs(rd.nr, self.predictor.descriptor_type, rmol, pmol, 
@@ -95,8 +95,8 @@ function (self::KPMRun)(sd::SpeciesData, rd::RxData; rdir::Union{String, Nothing
     @info " - Prediction complete.\n"
     flush_log()
 
-    Ea *= Constants.kcal_to_J
-    uncerts *= Constants.kcal_to_J
+    Ea = pyconvert(Vector, Ea) * Constants.kcal_to_J
+    uncerts = pyconvert(Vector, uncerts) * Constants.kcal_to_J
     Ea_final = measurement.(Ea, uncerts)
 
     return Ea_final
@@ -108,15 +108,15 @@ function (self::KPMRun)(sd::SpeciesData, rd::RxData, rcount::Int; rdir::Union{St
     flush_log()
 
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
-    pysys.stdout = PyTextIO(outfile)
+    pysys.stdout = outfile
 
     rsmi = [join(sort(reduce(vcat, [[sd.toStr[rd.id_reacs[rcount][i]] for _ in 1:rd.stoic_reacs[rcount][i]] for i in axes(rd.id_reacs[rcount], 1)])), ".")]
-    self.predictor.rsmi = rsmi
+    self.predictor.rsmi = pylist(rsmi)
     rmol = [rdChem.MolFromSmiles(smi) for smi in rsmi]
     psmi = [join(sort(reduce(vcat, [[sd.toStr[rd.id_prods[rcount][i]] for _ in 1:rd.stoic_prods[rcount][i]] for i in axes(rd.id_prods[rcount], 1)])), ".")]
-    self.predictor.psmi = psmi
+    self.predictor.psmi = pylist(psmi)
     pmol = [rdChem.MolFromSmiles(smi) for smi in psmi]
-    self.predictor.dH_arr = [rd.dH[rcount] .* Constants.eV_to_kcal_per_mol]
+    self.predictor.dH_arr = pylist([rd.dH[rcount] .* Constants.eV_to_kcal_per_mol])
     self.predictor.num_reacs = 1
 
     diff = kpm_utils.descriptors.calc_diffs(1, self.predictor.descriptor_type, rmol, pmol, 
@@ -128,8 +128,8 @@ function (self::KPMRun)(sd::SpeciesData, rd::RxData, rcount::Int; rdir::Union{St
     @info "Prediction complete.\n"
     flush_log()
     
-    Ea *= Constants.kcal_to_J
-    uncerts *= Constants.kcal_to_J
+    Ea = pyconvert(Vector, Ea) * Constants.kcal_to_J
+    uncerts = pyconvert(Vector, uncerts) * Constants.kcal_to_J
     Ea_final = measurement(Ea[1], uncerts[1])
 
     return Ea_final

@@ -9,18 +9,20 @@ using Kinetica
 Constants = Kinetica.Constants
 
 using Logging
-using PyCall
+using PythonCall
 using ExtXYZ
 using Measurements
 using DelimitedFiles
 using Statistics
 
 const version = VersionNumber(0, 3, 1)
-const rdChem = PyNULL()
-const kpm_utils = PyNULL()
+const rdChem = PythonCall.pynew()
+const kpm_utils = PythonCall.pynew()
+const pysys = PythonCall.pynew()
 function __init__()
-    copy!(rdChem, pyimport("rdkit.Chem"))
-    copy!(kpm_utils, pyimport("KPM.utils"))
+    PythonCall.pycopy!(rdChem, pyimport("rdkit.Chem"))
+    PythonCall.pycopy!(kpm_utils, pyimport("KPM.utils"))
+    PythonCall.pycopy!(pysys, pyimport("sys"))
 end
 
 include("runner.jl")
