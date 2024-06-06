@@ -43,7 +43,7 @@ mutable struct KPMRun
             "True"
         )
         _predict = pyimport("KPM.predict")
-        pysys.stdout = typeof(current_logger().stream) == IOStream ? current_logger().stream : pysys.__stdout__
+        pysys.stdout = typeof(current_logger().stream) == IOStream ? pytextio(current_logger().stream) : pysys.__stdout__
         predictor = _predict.ModelPredictor(args)
         flush_log()
         pysys.stdout = pysys.__stdout__
@@ -75,7 +75,7 @@ function (self::KPMRun)(sd::SpeciesData, rd::RxData; rdir::Union{String, Nothing
     flush_log()
 
     outfile = open(joinpath(calc_dir, "kpm.out"), "w")
-    pysys.stdout = outfile
+    pysys.stdout = pytextio(outfile)
 
     rsmi = [join(sort(reduce(vcat, [[sd.toStr[rids[i]] for _ in 1:rstoics[i]] for i in axes(rids, 1)])), ".") for (rids, rstoics) in zip(rd.id_reacs, rd.stoic_reacs)]
     self.predictor.rsmi = pylist(rsmi)
