@@ -1,7 +1,7 @@
 name = "KineticaKPM"
 uuid = "9f8df979-2f01-44d9-baa5-45613ca42263"
 authors = ["joegilkes <j.gilkes@warwick.ac.uk>"]
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
