@@ -2,3 +2,6 @@ deps/build.log
 Manifest.toml
 .vscode
 .CondaPkg
+
+.envrc
+shell.nix
