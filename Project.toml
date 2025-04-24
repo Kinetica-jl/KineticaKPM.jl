@@ -1,7 +1,7 @@
 name = "KineticaKPM"
 uuid = "9f8df979-2f01-44d9-baa5-45613ca42263"
-authors = ["joegilkes <j.gilkes@warwick.ac.uk>"]
-version = "0.4.3"
+authors = ["joegilkes <joe@joegilk.es>"]
+version = "0.4.4"
 
 [deps]
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
@@ -14,7 +14,7 @@ PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-Kinetica = "0.6.0"
+Kinetica = "0.6, 0.7"
 Measurements = "2.11.0"
 
 [extras]
